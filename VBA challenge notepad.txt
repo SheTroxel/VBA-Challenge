@@ -1,0 +1,177 @@
+Sub yearlystocktracker()
+'
+' yearlystocktracker Macro
+'
+Dim year_Open_price As Double
+Dim year_Close_price As Double
+Dim year_Total_volume As Double
+Dim Maxincrease As Double
+Dim Maxdecrease As Double
+Dim Maxvolume As Double
+
+Dim lastTicker As String
+Dim currentticker As String
+Dim MaxincreaseTicker As String
+Dim MaxdecreaseTicker As String
+Dim MaxvolumeTicker As String
+
+Dim lastrow As Integer
+Dim outputrow As Integer
+
+'Last Row = ws.Cells(Rows.Count, 1).End(x1Up).Row
+
+'Loop through each worksheet and activate them
+
+For Each ws In Worksheets
+    Worksheets(ws.Name).Activate
+    Debug.Print "processing worksheet "; ws.Name
+    'initialize for current sheet
+    lastTicker = ""
+    currentrow = 2
+    outputrow = 2
+    Cells(1, 12).Value = "Total Stock Volume"
+    Cells(1, 11).Value = "Percent Change"
+    Cells(1, 10).Value = "Yearly Change"
+    Cells(1, 9).Value = "Ticker"
+    Cells(2, 15).Value = "Greatest % Increase"
+    Cells(3, 15).Value = "Greatest % Decrease"
+    Cells(4, 15).Value = "Greatest Total Volumne"
+    Cells(1, 16).Value = "Ticker"
+    Cells(1, 17).Value = "Value"
+      
+'Setup for first row
+    lastTicker = Cells(currentrow, 1).Value
+    year_Open_price = Cells(currentrow, 3).Value
+    year_Total_volume = 0
+    
+'Determine values
+    
+    While Cells(currentrow, 1).Value <> ""
+       
+       currentticker = Cells(currentrow, 1).Value
+       If currentticker <> lastTicker Then
+            Debug.Print "found new ticker "; currentticker; " at row ", currentrow
+            'process previous ticker
+                       
+            year_Close_price = Cells(currentrow - 1, 6).Value
+            Cells(outputrow, 9).Value = lastTicker
+            Cells(outputrow, 10).Value = year_Close_price - year_Open_price
+            
+            If Cells(outputrow, 10).Value >= 0 Then
+                   Cells(outputrow, 10).Interior.Color = VBA.ColorConstants.vbGreen
+                    
+            Else
+                   Cells(outputrow, 10).Interior.Color = VBA.ColorConstants.vbRed
+                    
+            End If
+                
+            Cells(outputrow, 12).Value = year_Total_volume
+            'Debug.Print "year_Open_price"; year_Open_price
+                
+            Cells(outputrow, 11).Value = (year_Close_price - year_Open_price) / year_Open_price
+            Cells(outputrow, 11).NumberFormat = "0.00%"
+            
+            'Cells(outputrow, 13).Value = year_Open_price
+            'Cells(outputrow, 14).Value = year_Close_price
+            'Print output on next row down.
+            outputrow = outputrow + 1
+                                   
+            'initialize new ticker
+            year_Open_price = Cells(currentrow, 3).Value
+            year_Total_volume = Cells(currentrow, 7).Value
+        
+          
+        Else
+            year_Total_volume = year_Total_volume + Cells(currentrow, 7).Value
+            
+        End If
+        
+        lastTicker = currentticker
+        
+        'year_Close_price = Cells(currentrow, 6).Value
+        
+               
+        currentrow = currentrow + 1
+    
+    Wend
+
+    Debug.Print "Last ticker at "; currentticker; " at row ", currentrow - 1
+    'process last ticker in the table
+                       
+    year_Close_price = Cells(currentrow - 1, 6).Value
+    Cells(outputrow, 9).Value = lastTicker
+    Cells(outputrow, 10).Value = year_Close_price - year_Open_price
+    Cells(outputrow, 12).Value = year_Total_volume
+    'Debug.Print "year_Open_price"; year_Open_price
+                
+    Cells(outputrow, 11).Value = (year_Close_price - year_Open_price) / year_Open_price
+    Cells(outputrow, 11).NumberFormat = "0.00%"
+    
+    If Cells(outputrow, 10).Value >= 0 Then
+       Cells(outputrow, 10).Interior.Color = VBA.ColorConstants.vbGreen
+                    
+    Else
+        Cells(outputrow, 10).Interior.Color = VBA.ColorConstants.vbRed
+                    
+    End If
+   
+'set values for finding max increase, decrease and volument
+   
+   Maxincrease = 0#
+   MaxincreaseTicker = ""
+   Maxdecrease = 0#
+   MaxdecreaseTicker = ""
+   Maxvolume = 0
+   MaxvolumeTicker = ""
+   
+   
+'create for loop to go through column 11 all the rows to find greatest increase and decrease
+         
+   'find last row
+   lastrow = Cells(Rows.Count, 11).End(xlUp).Row
+   'Debug.Print "lastrow"; lastrow
+   
+   For rownumber = 2 To lastrow
+   'find max increase value
+   
+        If Cells(rownumber, 11).Value > Maxincrease Then
+            Maxincrease = Cells(rownumber, 11).Value
+            MaxincreaseTicker = Cells(rownumber, 9).Value
+               
+        End If
+  
+  'find max decrease value
+  
+        If Cells(rownumber, 11).Value < Maxdecrease Then
+            Maxdecrease = Cells(rownumber, 11).Value
+            MaxdecreaseTicker = Cells(rownumber, 9).Value
+               
+        End If
+   
+    'find max volume value
+   
+        If Cells(rownumber, 12).Value > Maxvolume Then
+            Maxvolume = Cells(rownumber, 12).Value
+            MaxvolumeTicker = Cells(rownumber, 9).Value
+               
+        End If
+        
+   Next rownumber
+   
+   Cells(2, 17).Value = Maxincrease
+   Cells(2, 17).NumberFormat = "0.00%"
+   Cells(2, 16).Value = MaxincreaseTicker
+   Cells(3, 17).Value = Maxdecrease
+   Cells(3, 17).NumberFormat = "0.00%"
+   Cells(3, 16).Value = MaxdecreaseTicker
+   Cells(4, 17).Value = Maxvolume
+   Cells(4, 16).Value = MaxvolumeTicker
+   
+  
+  'end of this worksheet, get next worksheet
+    
+  Debug.Print "end of summary loop"
+       
+Next ws
+
+End Sub
